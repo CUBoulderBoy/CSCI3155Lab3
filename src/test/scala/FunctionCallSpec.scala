@@ -32,7 +32,6 @@ class FunctionCallSpec extends FlatSpec {
     assert(e3 === N(6))
   } 
 
-  
   "Call" should "evaluate a function using small-step semantics" in {
     val f = "f"
     val x = "x"
