@@ -1,3 +1,11 @@
 project lab3-grader
 project Lab3-grader
 project lab3-grader
+run project
+run
+:q
+clear
+run Lab 3
+last lab3/compile:run
+kill
+project lab3-grader

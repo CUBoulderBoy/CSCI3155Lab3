@@ -186,13 +186,11 @@ object Lab3 extends jsy.util.JsyApplication {
     e match {
       //Simple cases
       case N(_) | B(_) | Undefined | S(_) => e
-      case Var(r) => if (r == x) {
-        v 
-      } else { e }
+      case Var(r) => if (r == x) v else e
       
       //Cases with stored values
-      case Function(name, r, f) => if (r == x) Function(name, r, f) else Function(name, r, subst(f))
-      case ConstDecl(r, e1, e2) => if (r == x) ConstDecl(r, e1, e2) else ConstDecl(r, e1, subst(e2))
+      case Function(name, r, f) => if (r == x || name == Some(x)) Function(name, r, f) else Function(name, r, subst(f))
+      case ConstDecl(r, e1, e2) => if (r == x) ConstDecl(r, subst(e1), e2) else ConstDecl(r, subst(e1), subst(e2))
       
       //Unary and Binary Cases
       case Unary(uop, e1) => Unary(uop, subst(e1))
@@ -214,7 +212,7 @@ object Lab3 extends jsy.util.JsyApplication {
       case Print(v1) if isValue(v1) => println(pretty(v1)); Undefined
       
       //Unary Cases with a Value
-      case Unary(uop @ (Neg | Not), v) if (isValue(v)) => uop match{
+      case Unary(uop @ (Neg | Not), v) if (isValue(v)) => (uop: @unchecked) match{
         //DoNeg
         case Neg => N(-toNumber(v))
         
@@ -223,7 +221,7 @@ object Lab3 extends jsy.util.JsyApplication {
       }
       
      //Binary Cases Where Both are Values
-      case Binary(bop, v1, v2) if (isValue(v1) && isValue(v2)) => (bop, v1, v2) match {
+      case Binary(bop, v1, v2) if (isValue(v1) && isValue(v2)) => (bop: @unchecked, v1, v2) match {
       
     	//DoPlusString1 & DoPlusString2
       	case (Plus, S(s), v2) => S(s + toStr(v2))
@@ -233,14 +231,14 @@ object Lab3 extends jsy.util.JsyApplication {
         case (Plus, v1, v2) => N(toNumber(v1) + toNumber(v2))
       	
         //DoArith
-        case (bop @ (Minus | Times | Div), v1, v2) => (bop, v1, v2) match {
+        case (bop @ (Minus | Times | Div), v1, v2) => (bop: @unchecked, v1, v2) match {
           case (Times, v1, v2) => N(toNumber(v1) * toNumber(v2))
           case (Div, v1, v2) => N(toNumber(v1) / toNumber(v2))
           case (Minus, v1, v2) => N(toNumber(v1) - toNumber(v2))
         }
         
         //DoEquality
-        case (bop @ (Eq | Ne), v1, v2) => (bop, v1, v2) match {
+        case (bop @ (Eq | Ne), v1, v2) => (bop: @unchecked, v1, v2) match {
 	        //Functions cannot do equality
         	case (bop @ (Eq | Ne), Function(_, _, _), v2) => throw new DynamicTypeError(e)
 	        case (bop @ (Eq | Ne), v1, Function(_, _, _)) => throw new DynamicTypeError(e)
@@ -263,6 +261,15 @@ object Lab3 extends jsy.util.JsyApplication {
 	        case (Le, v1, v2) => B(toNumber(v1) <= toNumber(v2))
 	        case (Gt, v1, v2) => B(toNumber(v1) > toNumber(v2))
 	        case (Ge, v1, v2) => B(toNumber(v1) >= toNumber(v2))
+        }
+        
+        //Binary AND/OR
+        case (bop @ (And | Or), v1, v2) => (bop: @unchecked) match {
+        	//DoAndTrue & DoAndFalse
+      		case And => if(toBoolean(v1)) v2 else v1
+      	
+      		//DoOrTrue & DoOrFalse
+      		case Or => if(toBoolean(v1)) v1 else v2
         }
       }
       
@@ -301,7 +308,7 @@ object Lab3 extends jsy.util.JsyApplication {
       case Unary(uop, e1) => Unary(uop, step(e1))
 
       //Binary Cases with the First as a Value
-      case Binary(bop, v1, e2) if (isValue(v1)) => (bop, v1, e2) match {
+      case Binary(bop, v1, e2) if (isValue(v1)) => (bop: @unchecked, v1, e2) match {
         //TypeErrorEquality1 & Factors in SearchEquality2
         case (bop @ (Eq | Ne), Function(_,_,_), e2) => throw new DynamicTypeError(e)
         
@@ -310,7 +317,7 @@ object Lab3 extends jsy.util.JsyApplication {
       }
       
       //Binary Cases with Both as Expressions
-      case Binary(bop, e1, e2) => (bop, e1, e2) match {
+      case Binary(bop, e1, e2) => (bop: @unchecked, e1, e2) match {
     	//TypeErrorEquality1  
       	case (bop @ (Eq | Ne), e1, Function(_,_,_)) => throw new DynamicTypeError(e)
         
